@@ -67,8 +67,7 @@ def cover(i1, i2):
     aufgedeckt[i2] = False
     buttons_locked = False
 
-#daewd
-äasd
+
 # Buttons
 root = tk.Tk()
 root.title("Kanji Memory")
