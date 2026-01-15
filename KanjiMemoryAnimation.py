@@ -32,6 +32,11 @@ class MemoryGame:
         }
         self.current_difficulty = "Medium"
 
+        # Animation
+        self.FLIP_STEPS = 6
+        self.FLIP_DELAY = 25
+        self.CARD_WIDTH = 5
+
         self.setup_gui()
         self.restart_game(full_reset=True)
 
@@ -101,7 +106,7 @@ class MemoryGame:
         if self.aufgedeckt[index]:
             return
 
-        self.buttons[index].config(text=self.karten[index])
+        self.flip_card(index, show=True)
         self.aufgedeckt[index] = True
 
         if self.erste_auswahl is None:
@@ -113,8 +118,8 @@ class MemoryGame:
 
     def check_pair(self, i1, i2):
         if self.karten[i1] != self.karten[i2]:
-            self.buttons[i1].config(text="")
-            self.buttons[i2].config(text="")
+            self.flip_card(i1, show=False)
+            self.flip_card(i2, show=False)
             self.aufgedeckt[i1] = self.aufgedeckt[i2] = False
 
         self.buttons_locked = False
@@ -182,11 +187,49 @@ class MemoryGame:
 
         self.start_timer()
 
-    # ---------- Difficulty ----------
+# ---------- Difficulty ----------
     def change_difficulty(self, level):
         self.current_difficulty = level
         self.restart_game(full_reset=True)
 
+
+# ---------- Animation ----------
+    def flip_card(self, index, show=True, step=0):
+        btn = self.buttons[index]
+
+        if step < self.FLIP_STEPS:
+            width = self.CARD_WIDTH - step
+            btn.config(width=max(1, width))
+            self.root.after(
+                self.FLIP_DELAY,
+                self.flip_card,
+                index,
+                show,
+                step + 1
+            )
+
+        elif step == self.FLIP_STEPS:
+            btn.config(text=self.karten[index] if show else "")
+
+            self.root.after(
+                self.FLIP_DELAY,
+                self.flip_card,
+                index,
+                show,
+                step + 1
+            )
+        else:
+            width = step - self.FLIP_STEPS
+            btn.config(width=min(self.CARD_WIDTH, width))
+
+            if width < self.CARD_WIDTH:
+                self.root.after(
+                    self.FLIP_DELAY,
+                    self.flip_card,
+                    index,
+                    show,
+                    step + 1
+                )
 
 # ---------- Main ----------
 if __name__ == "__main__":
