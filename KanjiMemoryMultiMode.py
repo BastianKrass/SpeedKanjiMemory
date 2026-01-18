@@ -1,11 +1,13 @@
 import random
 import tkinter as tk
 import math
+import pygame
 
 
 class MemoryGame:
     def __init__(self, root, kanji_list):
         self.root = root
+        pygame.mixer.init()
         self.kanji_list = kanji_list
 
         # Game state
@@ -28,6 +30,18 @@ class MemoryGame:
         self.ACCENT_COLOR = "#00ffcc"
         self.WIN_COLOR = "#4caf50"
         self.LOSE_COLOR = "#f44336"
+
+        # Sounds
+        self.sounds = {
+            "flip": pygame.mixer.Sound("sounds/flip.mp3"),
+            "match": pygame.mixer.Sound("sounds/match.mp3"),
+            "wrong": pygame.mixer.Sound("sounds/wrong.mp3"),
+            "win": pygame.mixer.Sound("sounds/win.mp3"),
+            "lose": pygame.mixer.Sound("sounds/lose.mp3"),
+        }
+
+        for s in self.sounds.values():
+            s.set_volume(0.5)
 
         # Difficulties
         max_pairs = len(self.kanji_list)
@@ -195,10 +209,12 @@ class MemoryGame:
 
     def check_pair(self, i1, i2):
         if self.karten[i1]["id"] != self.karten[i2]["id"]:
+            self.sounds["wrong"].play()
             self.flip_card(i1, show=False)
             self.flip_card(i2, show=False)
             self.aufgedeckt[i1] = self.aufgedeckt[i2] = False
-
+        else:
+            self.sounds["match"].play()
         self.buttons_locked = False
 
         if all(self.aufgedeckt):
@@ -206,12 +222,14 @@ class MemoryGame:
 
     def game_win(self):
         self.game_active = False
+        self.sounds["win"].play()
         for btn in self.buttons:
             btn.config(state=tk.DISABLED)
         self.timer_label.config(text="You Win!", fg=self.WIN_COLOR)
 
     def game_lose(self):
         self.game_active = False
+        self.sounds["lose"].play()
         for btn in self.buttons:
             btn.config(state=tk.DISABLED)
         self.timer_label.config(text="Time's up!", fg=self.LOSE_COLOR)
@@ -309,6 +327,9 @@ class MemoryGame:
 # ---------- Animation ----------
     def flip_card(self, index, show=True, step=0):
         btn = self.buttons[index]
+
+        if step == 0 and show:
+            self.sounds["flip"].play()
 
         if step < self.FLIP_STEPS:
             width = self.CARD_WIDTH - step
